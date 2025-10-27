@@ -19,9 +19,11 @@ python gui.py
 The Dragon Brain GUI provides an intuitive interface for analyzing markdown file similarity with three main panels:
 
 ### 1. Left Panel - Target File Content
-- Displays the complete content of your target file
-- Read-only view with syntax highlighting
+- Displays and **allows editing** of your target file
+- In-app markdown editor with edit detection
+- **Real-time section tracking**: Shows which section you're editing
 - Automatically loads when you select a target file
+- Changes are saved when you click the refresh button
 
 ### 2. Middle Panel - Results List
 - Shows all comparison files ranked by similarity
@@ -53,6 +55,16 @@ The Dragon Brain GUI provides an intuitive interface for analyzing markdown file
 1. Click **"Select Target File"** button
 2. Choose your main markdown file (the one you want to compare against)
 3. The file content will appear in the left panel
+4. You can now edit the content directly in the GUI
+
+### Step 1.5: Edit and Refresh (Optional)
+1. **Edit your target file** directly in the left panel
+2. As you type, the system **automatically detects which section** (heading) you're editing
+3. The edit detection label will show: `📝 Edited: {Section Name}`
+4. When ready, click the **🔄 Refresh** button to:
+   - Save your changes to the file
+   - Recalculate similarity with the updated content
+   - See new results based on your edits
 
 ### Step 2: Select Comparison Files
 
@@ -84,10 +96,17 @@ The Dragon Brain GUI provides an intuitive interface for analyzing markdown file
 - Progress bar shows calculation status
 - Status bar updates with current operation
 
+### Edit Detection & Quick Refresh
+- **Section-aware editing**: Automatically detects which markdown section you're editing
+- **Visual feedback**: Shows `📝 Edited: {Section Name}` when changes are made
+- **Smart refresh**: Click 🔄 button to save and recalculate instantly
+- **No file switching**: Edit, save, and recalculate all within the GUI
+
 ### Visual Feedback
 - Color-coded similarity scores
 - Easy-to-read HTML formatted details
 - Section highlighting by similarity level
+- Real-time edit detection labels
 
 ### Smart Analysis
 - Stop words filtering (English & Korean)
@@ -99,10 +118,12 @@ The Dragon Brain GUI provides an intuitive interface for analyzing markdown file
 
 1. **Better Results**: Use files with clear markdown structure (headings, bold text)
 2. **Faster Processing**: Select specific files instead of large directories if you know what you're looking for
-3. **Understanding Scores**:
+3. **Edit and Iterate**: Make changes to your target file and quickly refresh to see how similarity changes
+4. **Section Focus**: When editing, you'll see which section you're in - great for organizing thoughts
+5. **Understanding Scores**:
    - Combined similarity is the average of cosine and euclidean metrics
    - Look at section similarities to understand what specifically matches
-4. **Multiple Comparisons**: You can run multiple analyses without restarting the GUI
+6. **Multiple Comparisons**: You can run multiple analyses without restarting the GUI
 
 ## Keyboard Shortcuts
 - **Up/Down arrows**: Navigate through results list

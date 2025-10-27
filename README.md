@@ -6,12 +6,15 @@ A program that evaluates similarity between markdown note files and provides a r
 
 - 📄 Automatic keyword extraction from markdown files
 - 🔍 Similarity calculation using TF-IDF and cosine similarity
+- 🤖 **SBERT Support** - Optional Sentence-BERT for semantic similarity (new!)
 - 📊 File ranking based on similarity scores
 - 🎯 Markdown-specific keyword extraction (headings, bold text, links, etc.)
 - 🛑 Smart stop words filtering (NLTK for English, custom for Korean)
 - 📑 Section-level similarity analysis (compares by headings)
 - 🖥️ **GUI Application** - Easy-to-use graphical interface
 - 💻 **CLI Tool** - Command-line interface for automation
+- ✏️ **Edit Detection** - Automatically detects edited sections and enables quick refresh
+- 🔄 **Smart Refresh** - Recalculate similarity after making edits without restarting
 
 ## Installation
 
@@ -21,6 +24,9 @@ pip install -r requirements.txt
 
 # Or install individually
 pip install scikit-learn numpy nltk PyQt6
+
+# Optional: Install sentence-transformers for SBERT support
+pip install sentence-transformers
 ```
 
 ## Usage
@@ -36,8 +42,11 @@ python gui.py
 **GUI Features:**
 - 🎯 Visual file selection for target and comparison files
 - 📁 Directory browsing to select multiple files at once
+- 🤖 **SBERT toggle** - Switch between TF-IDF and Sentence-BERT similarity
 - 📊 Real-time similarity scores with color coding
-- 📝 Target file content preview
+- 📝 In-app markdown editor with edit detection
+- ✏️ Section-aware edit tracking (detects which heading you're editing)
+- 🔄 Quick refresh button to recalculate after edits
 - 🔍 Detailed section-level similarity analysis
 - 📈 Beautiful visualization of results with tabs
 - 🎨 Modern, user-friendly interface

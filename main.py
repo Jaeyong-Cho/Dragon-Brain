@@ -7,6 +7,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
 import numpy as np
 
+# SBERT support (optional)
+SBERT_AVAILABLE = False
+try:
+    from sentence_transformers import SentenceTransformer
+    SBERT_AVAILABLE = True
+except ImportError:
+    pass
+
 # NLTK stop words support
 try:
     from nltk.corpus import stopwords
@@ -189,16 +197,142 @@ def calculate_heading_similarity(target_keywords, compare_sections):
     
     return results
 
-def calculate_similarity(target_file, compare_files):
+def calculate_similarity_sbert(target_file, compare_files, model_name='paraphrase-MiniLM-L6-v2'):
+    """
+    Calculates similarity using Sentence-BERT (sentence-transformers).
+    Uses pre-trained transformer models to encode sentences and compute cosine similarity.
+    
+    Args:
+        target_file: Path to target markdown file
+        compare_files: List of paths to comparison markdown files
+        model_name: Name of the sentence-transformers model (default: paraphrase-MiniLM-L6-v2)
+    
+    Returns:
+        List of result dictionaries sorted by similarity
+    """
+    if not SBERT_AVAILABLE:
+        raise ImportError("sentence-transformers not installed. Install with: pip install sentence-transformers")
+    
+    print(f"Loading SBERT model: {model_name}...")
+    model = SentenceTransformer(model_name)
+    
+    # Read target file
+    print("Reading and processing target file...")
+    target_text = read_markdown_file(target_file)
+    if not target_text:
+        print(f"Error: Could not read target file {target_file}")
+        return []
+    
+    # Encode target file
+    target_embedding = model.encode(target_text, convert_to_tensor=False)
+    
+    # Also extract sections for section-level similarity
+    target_sections = extract_sections_by_heading(target_text)
+    
+    print(f"\nProcessing {len(compare_files)} comparison files...")
+    
+    # Read and encode comparison files
+    compare_data = []
+    for file_path in compare_files:
+        if file_path == target_file:
+            continue  # Skip self
+        
+        text = read_markdown_file(file_path)
+        if text:
+            # Encode entire file
+            embedding = model.encode(text, convert_to_tensor=False)
+            
+            # Extract sections
+            sections = extract_sections_by_heading(text)
+            
+            # Get keywords for display
+            _, freq = extract_keywords(text)
+            
+            compare_data.append({
+                'file': file_path,
+                'embedding': embedding,
+                'sections': sections,
+                'freq': freq
+            })
+    
+    if not compare_data:
+        print("No valid comparison files found.")
+        return []
+    
+    # Calculate similarities
+    results = []
+    for data in compare_data:
+        # File-level similarity using cosine similarity
+        cosine_sim = float(np.dot(target_embedding, data['embedding']) / 
+                          (np.linalg.norm(target_embedding) * np.linalg.norm(data['embedding'])))
+        
+        # For consistency with TF-IDF version, also compute euclidean-style metric
+        euclidean_dist = float(np.linalg.norm(target_embedding - data['embedding']))
+        euclidean_sim = 1 / (1 + euclidean_dist)
+        
+        combined_sim = (cosine_sim + euclidean_sim) / 2
+        
+        # Section-level similarity (target vs each section of compare file)
+        heading_similarities = []
+        for compare_section in data['sections']:
+            compare_content = compare_section['content']
+            if not compare_content.strip():
+                continue
+            
+            # Encode section
+            section_embedding = model.encode(compare_content, convert_to_tensor=False)
+            
+            # Calculate similarity
+            section_cosine = float(np.dot(target_embedding, section_embedding) / 
+                                 (np.linalg.norm(target_embedding) * np.linalg.norm(section_embedding)))
+            section_euclidean_dist = float(np.linalg.norm(target_embedding - section_embedding))
+            section_euclidean_sim = 1 / (1 + section_euclidean_dist)
+            section_combined = (section_cosine + section_euclidean_sim) / 2
+            
+            heading_similarities.append({
+                'heading': compare_section['heading'],
+                'content': compare_content,
+                'cosine_similarity': section_cosine,
+                'euclidean_similarity': section_euclidean_sim,
+                'combined_similarity': section_combined
+            })
+        
+        results.append({
+            'file': data['file'],
+            'cosine_similarity': cosine_sim,
+            'euclidean_similarity': euclidean_sim,
+            'combined_similarity': combined_sim,
+            'euclidean_distance': euclidean_dist,
+            'top_keywords': dict(data['freq'][:10]),
+            'heading_similarities': heading_similarities
+        })
+    
+    # Sort by combined similarity (highest first)
+    results.sort(key=lambda x: x['combined_similarity'], reverse=True)
+    
+    return results
+
+def calculate_similarity(target_file, compare_files, use_sbert=False):
     """
     Calculates similarity between target file and comparison files.
-    Uses TF-IDF vectorization with both cosine similarity and Euclidean distance.
+    
+    Args:
+        target_file: Path to target markdown file
+        compare_files: List of paths to comparison markdown files
+        use_sbert: If True, use Sentence-BERT instead of TF-IDF (default: False)
+    
+    Uses TF-IDF vectorization with both cosine similarity and Euclidean distance (default),
+    or Sentence-BERT embeddings if use_sbert=True.
     
     Metrics:
     - Cosine Similarity: Measures angle between vectors (0-1, higher is better)
     - Euclidean Distance: Measures geometric distance (0-∞, lower is better)
     - Combined Similarity: Average of both normalized metrics
     """
+    # Dispatch to SBERT if requested
+    if use_sbert:
+        return calculate_similarity_sbert(target_file, compare_files)
+    
     # Read target file
     print("Reading and processing target file...")
     target_text = read_markdown_file(target_file)

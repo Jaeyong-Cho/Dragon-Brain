@@ -2,6 +2,10 @@
 scikit-learn>=1.0.0
 numpy>=1.21.0
 nltk>=3.8.0
+markdown>=3.3.0
+
+# Optional: SBERT for advanced similarity (uncomment to use)
+sentence-transformers>=2.2.0
 
 # GUI dependencies
 PyQt6>=6.4.0
